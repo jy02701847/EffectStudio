@@ -22,6 +22,13 @@ DEFAULTS = {
     "host": "127.0.0.1",
     "port": 8770,
     "open_browser": True,
+    "version": "1.1.0",
+    "gui": True,                 # 打包后双击 = 原生窗口；start.bat 传 --server 走浏览器
+    "update": {
+        "url": "",               # 指向 latest.json 的地址；留空 = 不检查更新
+        "timeout": 8,
+        "channel": "stable",
+    },
     "strength": {
         "contrast": 1.35,
         "shadowhl": 1.35,
@@ -85,6 +92,7 @@ def load():
             cfg[path[0]][path[1]] = val
 
     cfg["root"] = RES_ROOT
+    cfg["app_dir"] = ROOT
     for k in ("output_dir", "tmp_dir", "log_dir"):
         cfg[k] = _abs(cfg[k])
         os.makedirs(cfg[k], exist_ok=True)

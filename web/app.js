@@ -129,3 +129,59 @@ $('clear').onclick = function () {
   $('result').hidden = true; $('grid').hidden = true; $('zip').disabled = true;
   progress(''); say('已清空');
 };
+
+/* ───── 版本 / 在线升级 ───── */
+var updInfo = null;
+fetch('/api/health').then(function (r) { return r.json(); }).then(function (d) {
+  $('ver').textContent = 'v' + d.version;
+});
+
+$('updCheck').onclick = async function () {
+  $('updMsg').textContent = '正在检查更新…';
+  $('updApply').hidden = true;
+  try {
+    var d = await (await fetch('/api/update/check')).json();
+    if (d.available) {
+      updInfo = d;
+      $('updMsg').textContent = '发现新版本 v' + d.version + (d.notes ? ' · ' + d.notes : '');
+      $('updApply').hidden = false;
+    } else {
+      $('updMsg').textContent = d.reason || '已是最新版本';
+    }
+  } catch (e) {
+    $('updMsg').textContent = '检查失败：' + e.message;
+  }
+};
+
+$('updApply').onclick = function () {
+  if (!updInfo || !updInfo.url) return;
+  $('updApply').disabled = true;
+  fetch('/api/update/apply', { method: 'POST' }).then(function (r) { return r.text(); })
+    .then(function () { updWatch(); });
+  updWatch();
+};
+
+function updWatch() {
+  var t = setInterval(async function () {
+    try {
+      var s = await (await fetch('/api/update/status')).json();
+      $('updMsg').textContent = s.msg || s.state;
+      if (s.state === 'error' || s.state === 'idle') {
+        clearInterval(t);
+        $('updApply').disabled = false; $('updApply').hidden = true;
+      }
+    } catch (e) {
+      // 服务已退出 = 正在重启升级
+      clearInterval(t);
+      $('updMsg').textContent = '正在重启新版…几秒后窗口会自动回来';
+      var n = 0;
+      var t2 = setInterval(async function () {
+        n++;
+        try { await fetch('/api/health'); clearInterval(t2);
+              $('updMsg').textContent = '升级完成 ✓';
+              location.reload(); } catch (_) {}
+        if (n > 30) { clearInterval(t2); $('updMsg').textContent = '重启超时，请手动打开程序'; }
+      }, 1500);
+    }
+  }, 700);
+}

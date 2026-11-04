@@ -15,10 +15,11 @@ import json
 import logging
 import os
 import re
+import threading
 import zipfile
 from http.server import BaseHTTPRequestHandler
 
-from core import nr, pipeline
+from core import nr, pipeline, updater
 
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
@@ -74,8 +75,19 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         try:
             if path == "/api/health":
-                self._json({"ok": True, "app": "EffectStudio", "version": "1.0",
+                self._json({"ok": True, "app": "EffectStudio",
+                            "version": self.cfg.get("version", "1.0.0"),
+                            "gui": bool(self.cfg.get("gui", True)),
                             "nr": nr.status(self.cfg), "strength": self.cfg["strength"]})
+                return
+            if path == "/api/update/check":
+                u = self.cfg.get("update", {})
+                self._json(updater.check(u.get("url", ""),
+                                         self.cfg.get("version", "1.0.0"),
+                                         int(u.get("timeout", 8))))
+                return
+            if path == "/api/update/status":
+                self._json(dict(updater.STATUS))
                 return
             if path == "/api/config":
                 self._json({"strength": self.cfg["strength"],
@@ -135,6 +147,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?")[0]
+        if path == "/api/update/apply":
+            u = self.cfg.get("update", {})
+            app_dir = self.cfg.get("app_dir", os.getcwd())
+            if not u.get("url"):
+                self._text("未配置更新源", 400)
+                return
+            if updater.STATUS["state"] in ("downloading", "restarting"):
+                self._text("升级已在进行中", 409)
+                return
+            threading.Thread(target=updater.apply,
+                             args=(u["url"], self.cfg.get("version", "1.0.0"), app_dir),
+                             daemon=True).start()
+            self._json({"ok": True, "msg": "升级流程已启动，程序将自动重启"})
+            return
         if path != "/api/process":
             self._text("not found", 404)
             return

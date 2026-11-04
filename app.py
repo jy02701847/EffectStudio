@@ -60,8 +60,8 @@ def open_later(url, delay=0.6):
     threading.Thread(target=go, daemon=True).start()
 
 
-def main():
-    cfg = config.load()
+def run_server(cfg):
+    """无窗口服务模式（start.bat / 排障用）。"""
     log_path = setup_log(cfg["log_dir"])
     host = cfg["host"]
     port = int(cfg["port"])
@@ -96,6 +96,52 @@ def main():
         pass
     finally:
         srv.server_close()
+
+
+def start_server_thread(cfg):
+    """起 HTTP 服务线程，返回 url；被窗口模式复用。"""
+    port = int(cfg["port"])
+    srv = None
+    for p in range(port, port + 12):
+        try:
+            srv = Server(("127.0.0.1", p), cfg)
+            port = p
+            break
+        except OSError:
+            continue
+    if srv is None:
+        raise RuntimeError("端口 %d~%d 都被占用" % (port, port + 11))
+    url = "http://127.0.0.1:%d" % port
+    with open(os.path.join(cfg["log_dir"], "last_url.txt"), "w", encoding="utf-8") as f:
+        f.write(url)
+    logging.info("EffectStudio 启动: %s", url)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return url
+
+
+def run_gui(cfg):
+    """原生窗口模式：pywebview 壳 + 本地 HTTP API，观感与正经桌面软件一致。"""
+    setup_log(cfg["log_dir"])
+    if health(cfg["host"], int(cfg["port"])):
+        logging.info("已有实例，直接开窗口连它")
+    url = start_server_thread(cfg)
+    import webview  # 延迟导入：--server 模式不需要它
+    webview.create_window(
+        "EffectStudio 效果图优化",
+        url,
+        width=1180, height=840, min_size=(920, 660),
+        background_color="#101418",
+    )
+    webview.start()
+
+
+def main():
+    cfg = config.load()
+    server_mode = "--server" in sys.argv or not cfg.get("gui", True)
+    if server_mode:
+        run_server(cfg)
+    else:
+        run_gui(cfg)
 
 
 if __name__ == "__main__":
