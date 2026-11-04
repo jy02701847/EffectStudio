@@ -1,0 +1,6 @@
+{
+  "version": "1.1.0",
+  "url": "https://github.com/jy02701847/EffectStudio/releases/download/v1.1.0/EffectStudio_v1.1.0.zip",
+  "sha256": "1f8e68c73cc26e6c94055e78ade988584a363a5a166178f846c17fc22fd27343",
+  "notes": "首个 Release：Lab 影调引擎（防偏色/防过曝）、原生窗口、批量处理"
+}
