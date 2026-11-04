@@ -1,0 +1,22 @@
+# 本机专用配置（含绝对路径，不进仓库）
+config.local.json
+_python.txt
+
+# 运行产物
+output/
+tmp/
+logs/
+.venv/
+
+# 可选外部运行时（若把 NeuralScreen 拷进 vendor）
+vendor/NeuralScreen/
+
+# Python
+__pycache__/
+*.py[cod]
+*.log
+.DS_Store
+
+# PyInstaller 打包产物（仓库只放源码 + EffectStudio.spec）
+build/
+dist/

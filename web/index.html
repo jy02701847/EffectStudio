@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>效果图优化 · 本地版</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>效果图优化</h1>
+      <p class="sub">纯本地运行 · 不上传外网 · 不依赖 Photoshop</p>
+    </div>
+    <div id="status" class="status">连接中…</div>
+  </header>
+
+  <section id="drop" class="drop">
+    <div class="drop-ico">＋</div>
+    <div><b>把图片拖到这里</b>，或 <label class="pick">选择文件<input type="file" id="file" accept="image/*" multiple hidden></label></div>
+    <div class="hint">支持 JPG / PNG，可一次选多张；8K 大图约 20~60 秒</div>
+    <div id="filelist" class="filelist"></div>
+  </section>
+
+  <section class="panel">
+    <div class="opts">
+      <label class="chk"><input type="checkbox" id="optAuto" checked> 智能Auto 调色</label>
+      <label class="chk"><input type="checkbox" id="optNr" checked> DLSS 神经净化</label>
+    </div>
+    <div class="sliders">
+      <label>整体力度 <input type="range" id="power" min="0.6" max="1.8" step="0.05" value="1"><span id="powerVal">1.00</span></label>
+      <label>质感 <input type="range" id="clarity" min="0" max="0.8" step="0.05" value="0.45"><span id="clarityVal">0.45</span></label>
+      <label>色温 <input type="range" id="wb" min="-50" max="50" step="1" value="0"><span id="wbVal">0</span></label>
+    </div>
+    <div class="actions">
+      <button id="run" class="primary">开始处理</button>
+      <button id="zip" disabled>打包下载全部</button>
+      <button id="clear" class="ghost">清空</button>
+    </div>
+    <div id="progress" class="progress"></div>
+  </section>
+
+  <section id="result" class="result" hidden>
+    <div class="result-head">
+      <h2>效果对比</h2>
+      <div class="tip">拖动中间的分割线看前后</div>
+    </div>
+    <div class="cmp" id="cmp">
+      <img id="imgAfter" alt="优化后">
+      <div class="cmp-before" id="beforeWrap"><img id="imgBefore" alt="原图"></div>
+      <div class="divider" id="divider"></div>
+      <input type="range" id="split" min="0" max="100" value="50" aria-label="前后对比分割">
+      <span class="tag left">原图</span><span class="tag right">优化后</span>
+    </div>
+    <div class="result-bar">
+      <a id="download" class="btn" href="#" download>下载原尺寸 PNG</a>
+      <span id="cost" class="cost"></span>
+    </div>
+    <div id="params" class="params"></div>
+  </section>
+
+  <section id="grid" class="grid" hidden></section>
+  <div id="log" class="log"></div>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>
